@@ -34,28 +34,6 @@ resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   tags: tags
 }
 
-module monitoring './shared/monitoring.bicep' = {
-  name: 'monitoring'
-  params: {
-    location: location
-    tags: tags
-    logAnalyticsName: '${abbrs.operationalInsightsWorkspaces}${resourceToken}'
-    applicationInsightsName: '${abbrs.insightsComponents}${resourceToken}'
-  }
-  scope: rg
-}
-
-module dashboard './shared/dashboard-web.bicep' = {
-  name: 'dashboard'
-  params: {
-    name: '${abbrs.portalDashboards}${resourceToken}'
-    applicationInsightsName: monitoring.outputs.applicationInsightsName
-    location: location
-    tags: tags
-  }
-  scope: rg
-}
-
 module registry './shared/registry.bicep' = {
   name: 'registry'
   params: {
@@ -66,16 +44,6 @@ module registry './shared/registry.bicep' = {
   scope: rg
 }
 
-module keyVault './shared/keyvault.bicep' = {
-  name: 'keyvault'
-  params: {
-    location: location
-    tags: tags
-    name: '${abbrs.keyVaultVaults}${resourceToken}'
-    principalId: principalId
-  }
-  scope: rg
-}
 
 module appsEnv './shared/apps-env.bicep' = {
   name: 'apps-env'
@@ -83,8 +51,6 @@ module appsEnv './shared/apps-env.bicep' = {
     name: '${abbrs.appManagedEnvironments}${resourceToken}'
     location: location
     tags: tags
-    applicationInsightsName: monitoring.outputs.applicationInsightsName
-    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
   }
   scope: rg
 }
@@ -96,7 +62,6 @@ module AgentWithSPKnowledgeViaRetrieval './app/AgentWithSPKnowledgeViaRetrieval.
     location: location
     tags: tags
     identityName: '${abbrs.managedIdentityUserAssignedIdentities}agentwith-${resourceToken}'
-    applicationInsightsName: monitoring.outputs.applicationInsightsName
     containerAppsEnvironmentName: appsEnv.outputs.name
     containerRegistryName: registry.outputs.name
     exists: AgentWithSPKnowledgeViaRetrievalExists
@@ -106,5 +71,3 @@ module AgentWithSPKnowledgeViaRetrieval './app/AgentWithSPKnowledgeViaRetrieval.
 }
 
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = registry.outputs.loginServer
-output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
-output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint

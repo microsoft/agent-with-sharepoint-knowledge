@@ -5,7 +5,6 @@ param tags object = {}
 param identityName string
 param containerRegistryName string
 param containerAppsEnvironmentName string
-param applicationInsightsName string
 param exists bool
 @secure()
 param appDefinition object
@@ -32,10 +31,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-01-01-pr
 
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
   name: containerAppsEnvironmentName
-}
-
-resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-  name: applicationInsightsName
 }
 
 resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -93,10 +88,6 @@ resource app 'Microsoft.App/containerApps@2023-05-02-preview' = {
           image: fetchLatestImage.outputs.?containers[?0].?image ?? 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           name: 'main'
           env: union([
-            {
-              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-              value: applicationInsights.properties.ConnectionString
-            }
             {
               name: 'PORT'
               value: '8080'
