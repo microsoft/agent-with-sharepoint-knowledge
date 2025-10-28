@@ -1,0 +1,359 @@
+@{
+    ViewData["Title"] = "Agent with SharePoint Knowledge";
+}
+
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Agent with SharePoint Knowledge</h1>
+        <p class="lead">AI-powered compliance checking for SharePoint documents</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.Error))
+    {
+        <div class="alert alert-danger" role="alert">
+            <strong>Error:</strong> @ViewBag.Error
+        </div>
+    }
+
+    @if (TempData["ConsentGranted"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            <strong>Success!</strong> Graph API permissions have been granted successfully. You can now run compliance checks.
+        </div>
+        <script>
+            // Update the view state after consent is granted
+            setTimeout(function() {
+                window.location.href = '@Url.Action("ConsentGranted")';
+            }, 2000);
+        </script>
+    }
+
+    @* Step 1: Authentication Status *@
+    @if (ViewBag.RequiresAuthentication == true)
+    {
+        @* User is not authenticated *@
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-circle"></i> Step 1: Authentication - Required
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Please sign in with your Microsoft 365 account to access the compliance checking features.</p>
+                <p class="mb-3">You'll need an account with access to SharePoint in your organization.</p>
+                <a asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn" class="btn btn-danger btn-lg">
+                    <i class="bi bi-person-lock"></i> Sign In with Microsoft 365
+                </a>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(ViewBag.UserName))
+    {
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-check-circle"></i> Step 1: Authentication - Complete
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">Welcome, <strong>@ViewBag.UserName</strong>! You are successfully signed in.</p>
+            </div>
+        </div>
+
+        @* Step 2: Graph API Permissions *@
+        @if (ViewBag.RequiresConsent == true)
+        {
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Step 2: Grant Permissions - Required
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>To run compliance checks, the application needs access to your SharePoint documents and email.</p>
+                    <p class="mb-3">The following permissions are required:</p>
+                    <ul class="mb-3">
+                        <li><strong>Read SharePoint files</strong> - To access policy documents</li>
+                        <li><strong>Read SharePoint sites</strong> - To search across your organization</li>
+                        <li><strong>Send emails</strong> - To notify document authors of compliance issues</li>
+                        <li><strong>Read user profiles</strong> - To identify document authors</li>
+                    </ul>
+                    <a href="@Url.Action("GrantConsent")" class="btn btn-warning btn-lg">
+                        <i class="bi bi-shield-lock"></i> Grant Permissions
+                    </a>
+                </div>
+            </div>
+        }
+        else if (ViewBag.ReadyForCompliance == true)
+        {
+            <div class="card mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-check-circle"></i> Step 2: Permissions - Granted
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">All required permissions have been granted. You're ready to run compliance checks!</p>
+                </div>
+            </div>
+
+            @* Step 3: Compliance Check Interface *@
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-shield-check"></i> Step 3: Run Compliance Check
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Click the button below to start an automated compliance check on your SharePoint documents.</p>
+                    <p class="mb-3">The system will:</p>
+                    <ul class="mb-4">
+                        <li>Retrieve relevant policy documents from SharePoint</li>
+                        <li>Analyze content against established compliance rules</li>
+                        <li>Generate a detailed violation report</li>
+                        <li>Send email notifications to document authors</li>
+                    </ul>
+                    
+                    <form asp-action="RunComplianceCheck" method="post" id="complianceForm" target="_self">
+                        <button type="submit" class="btn btn-primary btn-lg" id="runComplianceBtn">
+                            <i class="bi bi-play-circle"></i> Run Compliance Check
+                        </button>
+                    </form>
+                    
+                    @* Loading Overlay *@
+                    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                        <div class="loading-content">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h4 class="mt-3 mb-2">Processing Compliance Check</h4>
+                            <p class="text-muted">Please wait while we analyze your documents...</p>
+                            <div class="progress mt-3" style="height: 8px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="progressBar"></div>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted" id="loadingSteps">
+                                    <span id="step1" class="loading-step active">🔍 Retrieving policy documents...</span><br>
+                                    <span id="step2" class="loading-step">🤖 Analyzing content with AI...</span><br>
+                                    <span id="step3" class="loading-step">📝 Generating compliance report...</span><br>
+                                    <span id="step4" class="loading-step">📧 Sending notifications...</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Compliance Results (if available) *@
+            @if (!string.IsNullOrEmpty(ViewBag.ComplianceResult))
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-text"></i> Compliance Analysis Results
+                        </h5>
+                        <small>Generated on @ViewBag.Timestamp</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="compliance-result">
+                            @Html.Raw(ViewBag.ComplianceResult.ToString().Replace("\n", "<br/>"))
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(ViewBag.FileAuthor))
+                        {
+                            <hr>
+                            <p><strong>Document Author:</strong> @ViewBag.FileAuthor</p>
+                            
+                            @if (ViewBag.EmailSent == true)
+                            {
+                                <div class="alert alert-success" role="alert">
+                                    <i class="bi bi-check-circle"></i> <strong>Email Sent Successfully!</strong><br>
+                                    @ViewBag.EmailMessage
+                                </div>
+                            }
+                            else if (ViewBag.EmailSent == false)
+                            {
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="bi bi-exclamation-triangle"></i> <strong>Email Not Sent</strong><br>
+                                    @ViewBag.EmailError
+                                </div>
+                            }
+                        }
+                        
+                        <div class="mt-3">
+                            <form asp-action="RunComplianceCheck" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-arrow-repeat"></i> Run Another Check
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+    else
+    {
+        @* Fallback case *@
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear"></i> Loading...
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Please wait while we check your authentication status...</p>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .compliance-result {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        border-left: 4px solid #007bff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+    }
+    
+    .compliance-result h3 {
+        color: #dc3545;
+        margin-top: 20px;
+    }
+    
+    .compliance-result h4 {
+        color: #495057;
+        margin-top: 15px;
+    }
+    
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .step-indicator {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    }
+    
+    /* Loading Screen Styles */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .loading-content {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .loading-step {
+        display: block;
+        margin: 5px 0;
+        opacity: 0.4;
+        transition: opacity 0.3s ease;
+    }
+    
+    .loading-step.active {
+        opacity: 1;
+        color: #007bff;
+        font-weight: 500;
+    }
+    
+    .loading-step.completed {
+        opacity: 0.7;
+        color: #28a745;
+    }
+    
+    .progress {
+        background-color: #e9ecef;
+    }
+    
+    @@keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    .loading-step.active {
+        animation: pulse 1.5s infinite;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('complianceForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const progressBar = document.getElementById('progressBar');
+    const runBtn = document.getElementById('runComplianceBtn');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            
+            // Disable the button
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+            
+            // Start progress animation
+            animateProgress();
+        });
+    }
+    
+    function animateProgress() {
+        let progress = 0;
+        const steps = ['step1', 'step2', 'step3', 'step4'];
+        let currentStep = 0;
+        
+        const interval = setInterval(() => {
+            progress += Math.random() * 15 + 5; // Random progress between 5-20%
+            
+            if (progress > 100) {
+                progress = 100;
+                clearInterval(interval);
+            }
+            
+            progressBar.style.width = progress + '%';
+            
+            // Update steps
+            if (progress > 25 && currentStep < 1) {
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2').classList.add('active');
+                currentStep = 1;
+            } else if (progress > 50 && currentStep < 2) {
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step2').classList.add('completed');
+                document.getElementById('step3').classList.add('active');
+                currentStep = 2;
+            } else if (progress > 75 && currentStep < 3) {
+                document.getElementById('step3').classList.remove('active');
+                document.getElementById('step3').classList.add('completed');
+                document.getElementById('step4').classList.add('active');
+                currentStep = 3;
+            }
+        }, 800); // Update every 800ms
+    }
+});
+</script>

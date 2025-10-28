@@ -1,0 +1,110 @@
+@{
+    ViewData["Title"] = "Compliance Check";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>@ViewData["Title"]</h2>
+        <p>Run an automated compliance check on your SharePoint policies and documents.</p>
+        
+        @if (!string.IsNullOrEmpty(ViewBag.Error))
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> @ViewBag.Error
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(ViewBag.ComplianceResult))
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Compliance Analysis Results</h5>
+                    <small>Generated on @ViewBag.Timestamp</small>
+                </div>
+                <div class="card-body">
+                    <div class="compliance-result">
+                        @Html.Raw(ViewBag.ComplianceResult.ToString().Replace("\n", "<br/>"))
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(ViewBag.FileAuthor))
+                    {
+                        <hr>
+                        <p><strong>Document Author:</strong> @ViewBag.FileAuthor</p>
+                        
+                        @if (ViewBag.EmailSent == true)
+                        {
+                            <div class="alert alert-success" role="alert">
+                                <i class="bi bi-check-circle"></i> <strong>Email Sent Successfully!</strong><br>
+                                @ViewBag.EmailMessage
+                            </div>
+                        }
+                        else if (ViewBag.EmailSent == false)
+                        {
+                            <div class="alert alert-warning" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i> <strong>Email Not Sent</strong><br>
+                                @ViewBag.EmailError
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Start New Compliance Check</h5>
+                <p class="card-text">
+                    Click the button below to run a comprehensive compliance check on your SharePoint documents.
+                    The system will:
+                </p>
+                <ul>
+                    <li>Retrieve relevant policy documents from SharePoint</li>
+                    <li>Analyze content against established compliance rules</li>
+                    <li>Generate a detailed violation report</li>
+                    <li>Send email notifications to document authors</li>
+                </ul>
+                
+                <div class="d-flex gap-2 mb-3">
+                    <a href="@Url.Action("InitiateConsent", "Home")" class="btn btn-secondary">
+                        <i class="bi bi-shield-lock"></i> Grant Graph API Permissions
+                    </a>
+                </div>
+                
+                <form asp-action="ProcessCompliance" method="post">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-shield-check"></i> Run Compliance Check
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h6>Current User Context</h6>
+            <p class="text-muted">
+                Signed in as: <strong>@User.Identity.Name</strong><br>
+                The compliance check will be performed using your Microsoft 365 access permissions.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .compliance-result {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        border-left: 4px solid #007bff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+    }
+    
+    .compliance-result h3 {
+        color: #dc3545;
+        margin-top: 20px;
+    }
+    
+    .compliance-result h4 {
+        color: #495057;
+        margin-top: 15px;
+    }
+</style>

@@ -27,10 +27,9 @@ x86/
 [Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
-[Aa][Rr][Mm]64[Ee][Cc]/
 bld/
+[Bb]in/
 [Oo]bj/
-[Oo]ut/
 [Ll]og/
 [Ll]ogs/
 
@@ -416,3 +415,23 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+# Sensitive configuration files
+appsettings.json
+appsettings.*.json
+!appsettings.example.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Azure Functions
+local.settings.json
+
+
+# Azure credentials cache
+.azure/
+.azure
+
