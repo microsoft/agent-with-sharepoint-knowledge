@@ -33,9 +33,15 @@ class Program
             })
             .AddInMemoryTokenCaches();
 
-        // Configure options
+        // Configure options with validation
         builder.Services.Configure<AzureAIFoundryOptions>(builder.Configuration.GetSection("AzureAIFoundry"));
+        
         builder.Services.Configure<Microsoft365Options>(builder.Configuration.GetSection("Microsoft365"));
+        builder.Services.AddOptions<Microsoft365Options>()
+            .Bind(builder.Configuration.GetSection("Microsoft365"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        
         builder.Services.Configure<ChatSettingsOptions>(builder.Configuration.GetSection("ChatSettings"));
 
         // Register services

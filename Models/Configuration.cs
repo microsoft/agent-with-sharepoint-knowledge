@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AgentWithSPKnowledgeViaRetrieval.Models;
 
 public class AzureAIFoundryOptions
@@ -26,7 +28,12 @@ public class Microsoft365Options
     public bool UseUserAuthentication { get; set; } = true;
     public string[] Scopes { get; set; } = { "https://graph.microsoft.com/Files.Read.All", "https://graph.microsoft.com/Sites.Read.All" };
 
+    [Required(ErrorMessage = "FileContextQuery is required and cannot be empty")]
+    [MinLength(1, ErrorMessage = "FileContextQuery cannot be empty")]
     public string FileContextQuery { get; set; } = string.Empty;
+    
+    [Required(ErrorMessage = "RulesContextQuery is required and cannot be empty")]
+    [MinLength(1, ErrorMessage = "RulesContextQuery cannot be empty")]
     public string RulesContextQuery { get; set; } = string.Empty;
 }
 
