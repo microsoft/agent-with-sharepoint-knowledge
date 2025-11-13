@@ -70,14 +70,12 @@
           "Instance": "https://login.microsoftonline.com/",
           "TenantId": "your-tenant-id",
           "ClientId": "your-client-id", 
-          "ClientSecret": "your-client-secret",
           "CallbackPath": "/signin-oidc",
           "SignedOutCallbackPath": "/signout-callback-oidc"
         },
         "AzureAIFoundry": {
           "ProjectEndpoint": "your-azure-ai-inference-endpoint",
-          "ModelName": "your-model-name",
-          "APIKey": "your-api-key"
+          "ModelName": "your-model-name"
         },
         "Microsoft365": {
           "TenantId": "your-tenant-id",
@@ -86,6 +84,25 @@
         }
       }
       ```
+
+   3. **Runtime Secret Creation**
+      
+      1. **Ensure Your Account Has Permissions**:
+         - Log in through `azd auth login` with an account that permissions to create secrets for the app configured in your `appsettings.json`'s `AzureAd:ClientId`
+
+      2. **Run the Application**:
+         ```bash
+         dotnet run
+         ```
+
+         The application will automatically:
+         - Check if a client secret exists in configuration
+         - Create a new secret if none exists
+         - Configure it for the current session
+
+      3. **Verify Operation**:
+         - Check the console output during startup for secret creation messages
+         - The application will automatically handle secret creation and configuration
 
       > [!NOTE]
       > You will need your Azure AI inference endpoint (which is not your Azure AI Foundry Project endpoint). To get this navigate to `Models + Endpoints > name of Model` Switch the SDK to `Azure AI Inference SDK` and the code panel should have some code sample with the relevant endpoint. This endpoint will look something like `https://{projectName}.cognitiveservices.azure.com/openai/deployments/{modelName}`
