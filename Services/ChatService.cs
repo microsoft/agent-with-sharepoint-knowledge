@@ -12,7 +12,6 @@ public class ChatService : IChatService
     private readonly ILogger<ChatService> _logger;
     private readonly Microsoft365Options _microsoft365Options;
 
-
     public ChatService(
         IRetrievalService retrievalService,
         IFoundryService foundryService,
