@@ -81,39 +81,39 @@ public class HomeController : Controller
             ViewBag.ReadyForCompliance = true;
 
             // Send email with results
-            if (!string.IsNullOrEmpty(response.FileAuthor))
-            {
-                try
-                {
-                    var emailResult = await _mailService.SendMailAsync(
-                        response.FileAuthor,
-                        response.LlmResponse,
-                        "compliance-check",
-                        cancellationToken);
+            // if (!string.IsNullOrEmpty(response.FileAuthor))
+            // {
+            //     try
+            //     {
+            //         var emailResult = await _mailService.SendMailAsync(
+            //             response.FileAuthor,
+            //             response.LlmResponse,
+            //             "compliance-check",
+            //             cancellationToken);
                     
-                    if (emailResult.Success)
-                    {
-                        ViewBag.EmailSent = true;
-                        ViewBag.EmailMessage = emailResult.Message;
-                    }
-                    else
-                    {
-                        ViewBag.EmailSent = false;
-                        ViewBag.EmailError = emailResult.Message;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Unexpected error while sending email notification");
-                    ViewBag.EmailSent = false;
-                    ViewBag.EmailError = "An unexpected error occurred while sending email notification";
-                }
-            }
-            else
-            {
-                ViewBag.EmailSent = false;
-                ViewBag.EmailError = "No file author found - unable to send email notification";
-            }
+            //         if (emailResult.Success)
+            //         {
+            //             ViewBag.EmailSent = true;
+            //             ViewBag.EmailMessage = emailResult.Message;
+            //         }
+            //         else
+            //         {
+            //             ViewBag.EmailSent = false;
+            //             ViewBag.EmailError = emailResult.Message;
+            //         }
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         _logger.LogWarning(ex, "Unexpected error while sending email notification");
+            //         ViewBag.EmailSent = false;
+            //         ViewBag.EmailError = "An unexpected error occurred while sending email notification";
+            //     }
+            // }
+            // else
+            // {
+            //     ViewBag.EmailSent = false;
+            //     ViewBag.EmailError = "No file author found - unable to send email notification";
+            // }
 
             return View("Index");
         }

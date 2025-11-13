@@ -2,10 +2,10 @@
 
 ## Prerequisites
 
-- .NET 8.0 SDK
-- Azure AI Foundry resource  
-- Microsoft 365 tenant with SharePoint
-- Azure App Registration with delegated permissions
+- .NET 8.0 SDK.
+- Azure AI Foundry resource with a deployed model. The model must support `chatCompletions` Inference Tasks. Visit [our learn articlesfor details on how to deploy Foundry Models](https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/how-to/create-model-deployments?pivots=ai-foundry-portal)
+- Microsoft 365 tenant with a  SharePoint Site.
+- Azure App Registration with delegated permissions.
 
 ## Setup Instructions
 
@@ -24,23 +24,16 @@
       - Click **New registration**
       - Name: your app name
       - Supported account types: **Accounts in this organizational directory only (Single tenant)**
-      - Redirect URI: **Web** platform with `https://localhost:5001/signin-oidc`
+      - Redirect URI: **Web** platform with the following redirect uris `https://localhost:5001/signin-oidc`, `https://localhost:5001/signout-callback-oidc`. Furthermore Enable ID tokens under Implicit grant and hybrid flows
       - Click **Register**
 
-   2. **Configure Authentication**:
-      - Go to **Authentication** in the left menu
-      - Under **Platform configurations**:
-        - Ensure **Web** platform is configured with redirect URI: `https://localhost:5001/signin-oidc`
-        - Add logout URL: `https://localhost:5001/signout-callback-oidc`
-        - Enable **ID tokens** under Implicit grant and hybrid flows
-
-   3. **Create Client Secret**:
+   2. **Create Client Secret**:
       - Go to **Certificates & secrets**
       - Click **New client secret**
       - Add description and set expiration
       - **Copy the secret value** immediately (you won't see it again)
 
-   4. **Configure API Permissions**:
+   3. **Configure API Permissions**:
       - Go to **API permissions** → **Add a permission** → **Microsoft Graph** → **Delegated permissions**
       - Add these permissions:
         - `Files.Read.All`
@@ -70,7 +63,7 @@
           "SignedOutCallbackPath": "/signout-callback-oidc"
         },
         "AzureAIFoundry": {
-          "ProjectEndpoint": "your-azure-ai-inference-endpoint",
+          "DeployedModelEndpoint": "your-azure-ai-inference-endpoint",
           "ModelName": "your-model-name",
           "APIKey": "your-api-key"
         },
@@ -83,7 +76,30 @@
       ```
 
       > [!NOTE]
-      > You will need your Azure AI inference endpoint (which is not your Azure AI Foundry Project endpoint). To get this navigate to `Models + Endpoints > name of Model` Switch the SDK to `Azure AI Inference SDK` and the code panel should have some code sample with the relevant endpoint. This endpoint will look something like `https://{projectName}.cognitiveservices.azure.com/openai/deployments/{modelName}`
+      > You will need the endpoint to your deployed model (which is not your Azure AI Foundry Project endpoint). To get this navigate to `Models + Endpoints > name of Model` Switch the SDK to `Azure AI Inference SDK` and the code panel should have some code sample with the relevant endpoint. This endpoint will look something like `https://{projectName}.cognitiveservices.azure.com/openai/deployments/{modelName}`
+      > For more details, visit [Azure AI inference endpoint learn article ](https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/concepts/endpoints?tabs=python#azure-ai-inference-endpoint).
+
+5. **Prepare SharePoint Site**
+
+The default configuration values (i.e. those without changing the prompts in `appsettings.json`) assume that you have a SharePoint site with documents. Some of these documents must include specific 
+rules (for the purposes of this sample we call these policy rules) which will be run against prospective content (or policy). 
+
+For example [Sample Rule book](./sample_docs/Sample%20Rule%20book.docx) is a Word document containing all the 
+rules that a prospective policy must adhere to. In contrast [Sample Policy](./sample_docs/Sample%20Policy.docx) is a potential policy that a user might have drafted. This sample policy will be run against the established rules with 
+a report of possible violations being the generated output.
+
+Therefore after setting up your SharePoint site, upload similar documents to your site. Note that it takes some time for
+the underlying index (which the Copilot Retrieval API uses) to be updated after uploading your documents. 
+
+*Possible Extensions and Customizations*
+
+With the guidance provided above there are several extension points one could
+utilize to customize the default solution for other use cases. This could include:
+
+- Editing `Microsoft365.FileContextQuery` in `appsettings.json` - to change the "file content" context that the rules will be run against.
+- Editing `Microsoft365.RulesContext` in `appsettings.json` - to change the "rules" that the "file content" will be run against.
+- Editing `AzureAIFoundry.SystemMessage` - to change how the AI model should process the 2-staged retrieval that is performed by the fileContextQuery and the ruleContextQuery. For example, if the 
+"fileContextQuery" returns "candidate resume applications for a job posting" and "ruleContextQuery" returns "job requirements for said job posting", then we can edit the systemMessage accordingly.
 
 4. **Run Locally**
 

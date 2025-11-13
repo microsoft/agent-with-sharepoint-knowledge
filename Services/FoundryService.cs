@@ -27,11 +27,11 @@ public class FoundryService : IFoundryService
         _chatSettings = chatSettings.Value;
         _logger = logger;
 
-        var endpoint = new Uri(_foundryOptions.ProjectEndpoint);
+        var deployedModelInferenceEndpoint = new Uri(_foundryOptions.DeployedModelEndpoint);
         var credential = new AzureKeyCredential(_foundryOptions.APIKey);
 
         _chatClient = new ChatCompletionsClient(
-            endpoint,
+            deployedModelInferenceEndpoint,
             credential,
             new AzureAIInferenceClientOptions()
         );
@@ -54,7 +54,7 @@ public class FoundryService : IFoundryService
                     new ChatRequestSystemMessage(systemMessage),
                     new ChatRequestUserMessage(userMessage)
                 },
-                Model = _foundryOptions.ModelName,
+                Model = _foundryOptions.DeployedModelName,
                 MaxTokens = _chatSettings.MaxTokens,
                 Temperature = _chatSettings.Temperature
             };
@@ -74,22 +74,8 @@ public class FoundryService : IFoundryService
 
     private string BuildSystemMessage()
     {
-        var systemMessageBuilder = new StringBuilder();
 
-        systemMessageBuilder
-            .AppendLine("You are an compliance agent that detects policy violations in policy documents. You will be provided the relevant policy rules alongside the file contents at the end of these instructions."
-            + "Your job is to identify and classify issues with the file contents and produce a summary of all the violations."
-            + "Use the given rules only as the definitive source of rules. For each violation add a citation to the relevant rule violation. The citation must include the name of the rule book which contains the rule that has been violated"
-            + "and a brief summary of why you think there is a violation. Do not include any other section (such as recommendations, or a total tally count for number of violations) that does not correspond to the sections above");
-
-        systemMessageBuilder.AppendLine();
-        systemMessageBuilder.AppendLine("Instructions:");
-        systemMessageBuilder.AppendLine("- Complete task based on the provided context");
-        systemMessageBuilder.AppendLine("- Be concise and accurate");
-        systemMessageBuilder.AppendLine("- If asked about sources, reference the titles and URLs provided");
-        systemMessageBuilder.AppendLine("- If the context doesn't contain enough information, be honest about limitations");
-
-        return systemMessageBuilder.ToString();
+        return _foundryOptions.SystemMessage;
     }
     
     private string BuildUserMessage(List<RetrievedContent> rulesContext, RetrievedContent filesContext)
