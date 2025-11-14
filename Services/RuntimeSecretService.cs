@@ -44,14 +44,21 @@ public class RuntimeSecretService : IRuntimeSecretService
                 return existingSecret;
             }
 
-            // Create a new secret
-            _logger.LogInformation("Creating new client secret for app registration {ClientId}", _clientId);
-            var newSecret = await _appRegistrationService.CreateClientSecretAsync(
-                _clientId, 
-                $"Runtime-created-{DateTimeOffset.UtcNow:yyyy-MM-dd-HH-mm}",
-                24); // 24 months expiration
+            // Get the current user ID
+            var userId = await _appRegistrationService.GetCurrentUserIdAsync();
+            _logger.LogInformation("Creating user-specific client secret for user {UserId}", userId);
 
-            _logger.LogInformation("Successfully created new client secret with 24-month expiration");
+            // Clean up any existing secrets for this user
+            await _appRegistrationService.CleanupUserSecretsAsync(_clientId, userId);
+
+            // Create a new user-specific secret
+            _logger.LogInformation("Creating new user-specific client secret for app registration {ClientId}", _clientId);
+            var newSecret = await _appRegistrationService.CreateUserSpecificClientSecretAsync(
+                _clientId, 
+                userId,
+                24); // 24 hours expiration
+
+            _logger.LogInformation("Successfully created new user-specific client secret with 24-hour expiration");
             return newSecret;
         }
         catch (Exception ex)

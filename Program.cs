@@ -41,17 +41,17 @@ class Program
                 
                 // Create services needed for secret creation
                 var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-                var logger = loggerFactory.CreateLogger<AppRegistrationService>();
-                var appRegistrationService = new AppRegistrationService(logger);
+                var appRegLogger = loggerFactory.CreateLogger<AppRegistrationService>();
+                var runtimeLogger = loggerFactory.CreateLogger<RuntimeSecretService>();
+                
+                var appRegistrationService = new AppRegistrationService(appRegLogger);
+                var runtimeSecretService = new RuntimeSecretService(appRegistrationService, builder.Configuration, runtimeLogger);
                 
                 var clientId = builder.Configuration["AzureAd:ClientId"];
                 if (!string.IsNullOrEmpty(clientId))
                 {
-                    // Create the secret synchronously (since we're in startup)
-                    var newSecret = appRegistrationService.CreateClientSecretAsync(
-                        clientId, 
-                        $"Auto-generated-{DateTimeOffset.UtcNow:yyyy-MM-dd-HH-mm}",
-                        24).GetAwaiter().GetResult();
+                    // Create the user-specific secret synchronously (since we're in startup)
+                    var newSecret = runtimeSecretService.EnsureClientSecretAsync().GetAwaiter().GetResult();
                     
                     // Add the secret to configuration as an in-memory source
                     var memoryConfig = new Dictionary<string, string?>
