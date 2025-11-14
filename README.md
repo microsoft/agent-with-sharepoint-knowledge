@@ -11,7 +11,7 @@ This project features a web application and an agent designed to help users proc
 </div>
 <br/>
 
-With any AI solutions you create using these templates, you are responsible for assessing all associated risks, and for complying with all applicable laws and safety standards. [Learn more](https://learn.microsoft.com/en-us/azure/ai-foundry/responsible-ai/agents/transparency-note) and [See here](https://github.com/microsoft/agent-framework/blob/main/TRANSPARENCY_FAQ.md).
+**Note**: With any AI solutions you create using these templates, you are responsible for assessing all associated risks, and for complying with all applicable laws and safety standards. [Learn more](https://learn.microsoft.com/en-us/azure/ai-foundry/responsible-ai/agents/transparency-note) and [See here](https://github.com/microsoft/agent-framework/blob/main/TRANSPARENCY_FAQ.md).
 
 <h2><img src="./docs/images/readme/solution-overview.png" width="48" />
 Solution overview
