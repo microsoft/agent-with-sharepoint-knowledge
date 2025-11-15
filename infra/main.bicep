@@ -66,8 +66,16 @@ module AgentWithSPKnowledgeViaRetrieval './app/AgentWithSPKnowledgeViaRetrieval.
     containerRegistryName: registry.outputs.name
     exists: AgentWithSPKnowledgeViaRetrievalExists
     appDefinition: AgentWithSPKnowledgeViaRetrievalDefinition
+    resourceToken: resourceToken
   }
   scope: rg
 }
 
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = registry.outputs.loginServer
+output MANAGED_IDENTITY_CLIENT_ID string = AgentWithSPKnowledgeViaRetrieval.outputs.managedIdentityClientId
+output MANAGED_IDENTITY_PRINCIPAL_ID string = AgentWithSPKnowledgeViaRetrieval.outputs.managedIdentityPrincipalId
+output AZURE_CLIENT_ID string = AgentWithSPKnowledgeViaRetrieval.outputs.appId
+output AZURE_APP_UNIQUE_NAME string = AgentWithSPKnowledgeViaRetrieval.outputs.appUniqueName
+
+// Output the principal ID parameter for reference (used by azd)
+output DEPLOYMENT_PRINCIPAL_ID string = principalId

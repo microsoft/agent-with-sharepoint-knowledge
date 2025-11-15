@@ -1,3 +1,5 @@
+extension 'br:mcr.microsoft.com/bicep/extensions/microsoftgraph/v1.0:0.1.8-preview'
+
 param name string
 param location string = resourceGroup().location
 param tags object = {}
@@ -6,6 +8,7 @@ param identityName string
 param containerRegistryName string
 param containerAppsEnvironmentName string
 param exists bool
+param resourceToken string
 @secure()
 param appDefinition object
 
@@ -23,6 +26,22 @@ var env = map(filter(appSettingsArray, i => i.?secret == null), i => {
 resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: identityName
   location: location
+}
+
+// Configure the Azure AD application with federated credential to trust the managed identity
+resource azureAdApp 'Microsoft.Graph/applications@v1.0' = {
+  displayName: 'AI App with SharePoint Knowledge'
+  uniqueName: 'spe-compliance-app-${resourceToken}'
+
+  resource managedIdentityFederatedCredential 'federatedIdentityCredentials@v1.0' = {
+    name: '${azureAdApp.uniqueName}/managed-identity-federation'
+    description: 'Trust the container app managed identity to impersonate the Azure AD application'
+    audiences: [
+      'api://AzureADTokenExchange'
+    ]
+    issuer: '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
+    subject: identity.properties.principalId
+  }
 }
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
@@ -92,6 +111,26 @@ resource app 'Microsoft.App/containerApps@2023-05-02-preview' = {
               name: 'PORT'
               value: '8080'
             }
+            {
+              name: 'AzureAd__TenantId'
+              value: tenant().tenantId
+            }
+            {
+              name: 'AzureAd__ClientId'
+              value: azureAdApp.appId
+            }
+            {
+              name: 'AzureAd__ClientCredentials__0__SourceType'
+              value: 'SignedAssertionFromManagedIdentity'
+            }
+            {
+              name: 'AzureAd__ClientCredentials__0__ManagedIdentityClientId'
+              value: identity.properties.clientId
+            }
+            {
+              name: 'AzureAd__ClientCredentials__0__TokenExchangeUrl'
+              value: 'api://AzureADTokenExchange/.default'
+            }
           ],
           env,
           map(secrets, secret => {
@@ -116,3 +155,7 @@ output defaultDomain string = containerAppsEnvironment.properties.defaultDomain
 output name string = app.name
 output uri string = 'https://${app.properties.configuration.ingress.fqdn}'
 output id string = app.id
+output managedIdentityPrincipalId string = identity.properties.principalId
+output managedIdentityClientId string = identity.properties.clientId
+output appId string = azureAdApp.appId
+output appUniqueName string = azureAdApp.uniqueName

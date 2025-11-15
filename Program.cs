@@ -28,55 +28,55 @@ class Program
         if (builder.Environment.IsDevelopment())
         {
             builder.Configuration.AddUserSecrets<Program>();
-        }
 
-        // Handle runtime secret creation BEFORE configuring authentication
-        var clientSecret = builder.Configuration["AzureAd:ClientSecret"];
-        
-        if (string.IsNullOrEmpty(clientSecret))
-        {
-            try
+            // Handle runtime secret creation BEFORE configuring authentication
+            var clientSecret = builder.Configuration["AzureAd:ClientSecret"];
+
+            if (string.IsNullOrEmpty(clientSecret))
             {
-                Console.WriteLine("No client secret found. Attempting to create one using runtime secret creation...");
-                
-                // Create services needed for secret creation
-                var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-                var appRegLogger = loggerFactory.CreateLogger<AppRegistrationService>();
-                var runtimeLogger = loggerFactory.CreateLogger<RuntimeSecretService>();
-                
-                var appRegistrationService = new AppRegistrationService(appRegLogger);
-                var runtimeSecretService = new RuntimeSecretService(appRegistrationService, builder.Configuration, runtimeLogger);
-                
-                var clientId = builder.Configuration["AzureAd:ClientId"];
-                if (!string.IsNullOrEmpty(clientId))
+                try
                 {
-                    // Create the user-specific secret synchronously (since we're in startup)
-                    var newSecret = runtimeSecretService.EnsureClientSecretAsync().GetAwaiter().GetResult();
-                    
-                    // Add the secret to configuration as an in-memory source
-                    var memoryConfig = new Dictionary<string, string?>
+                    Console.WriteLine("No client secret found. Attempting to create one using runtime secret creation...");
+
+                    // Create services needed for secret creation
+                    var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+                    var appRegLogger = loggerFactory.CreateLogger<AppRegistrationService>();
+                    var runtimeLogger = loggerFactory.CreateLogger<RuntimeSecretService>();
+
+                    var appRegistrationService = new AppRegistrationService(appRegLogger);
+                    var runtimeSecretService = new RuntimeSecretService(appRegistrationService, builder.Configuration, runtimeLogger);
+
+                    var clientId = builder.Configuration["AzureAd:ClientId"];
+                    if (!string.IsNullOrEmpty(clientId))
                     {
-                        ["AzureAd:ClientSecret"] = newSecret
-                    };
-                    builder.Configuration.AddInMemoryCollection(memoryConfig);
-                    
-                    Console.WriteLine("Successfully created and configured client secret.");
-                }
-                else
-                {
-                    Console.WriteLine("Warning: AzureAd:ClientId not found in configuration. Cannot create client secret.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to create client secret: {ex.Message}");
-                Console.WriteLine("Application will continue but may fail during authentication.");
-            }
-        }
+                        // Create the user-specific secret synchronously (since we're in startup)
+                        var newSecret = runtimeSecretService.EnsureClientSecretAsync().GetAwaiter().GetResult();
 
-        // Register runtime secret services for ongoing management
-        builder.Services.AddScoped<IAppRegistrationService, AppRegistrationService>();
-        builder.Services.AddScoped<IRuntimeSecretService, RuntimeSecretService>();
+                        // Add the secret to configuration as an in-memory source
+                        var memoryConfig = new Dictionary<string, string?>
+                        {
+                            ["AzureAd:ClientSecret"] = newSecret
+                        };
+                        builder.Configuration.AddInMemoryCollection(memoryConfig);
+
+                        Console.WriteLine("Successfully created and configured client secret.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Warning: AzureAd:ClientId not found in configuration. Cannot create client secret.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to create client secret: {ex.Message}");
+                    Console.WriteLine("Application will continue but may fail during authentication.");
+                }
+            }
+
+            // Register runtime secret services for ongoing management
+            builder.Services.AddScoped<IAppRegistrationService, AppRegistrationService>();
+            builder.Services.AddScoped<IRuntimeSecretService, RuntimeSecretService>();
+        }
 
         // Add Microsoft Identity platform authentication
         builder.Services.AddMicrosoftIdentityWebAppAuthentication(builder.Configuration, "AzureAd")
