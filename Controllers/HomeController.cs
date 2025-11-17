@@ -58,9 +58,10 @@ public class HomeController : Controller
         "https://graph.microsoft.com/Files.Read.All", 
         "https://graph.microsoft.com/Sites.Read.All", 
         "https://graph.microsoft.com/Mail.Send", 
-        "https://graph.microsoft.com/User.Read.All" 
+        "https://graph.microsoft.com/User.Read.All",
+        // This will trigger another consent
+        "https://cognitiveservices.azure.com/user_impersonation"
     })]
-    [AuthorizeForAzureAIScopes]
     [EnsureTokensAcquired]
     [HttpPost]
     public async Task<IActionResult> RunComplianceCheck(CancellationToken cancellationToken)
