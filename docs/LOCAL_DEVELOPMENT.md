@@ -49,7 +49,12 @@
         - `User.Read.All`
       - Click **Grant admin consent**
 
-3. **Configure Application Settings**
+3. **Upload sample files to your SharePoint site**
+   1. Create a SharePoint site if you don't already have one. Keep the site URL handy to paste in the application settings in the next step.
+
+   2. Upload the files from the /Sample data folder to your SharePoint site.
+
+4. **Configure Application Settings**
 
    1. Copy the example configuration:
 
@@ -85,7 +90,8 @@
       > [!NOTE]
       > You will need your Azure AI inference endpoint (which is not your Azure AI Foundry Project endpoint). To get this navigate to `Models + Endpoints > name of Model` Switch the SDK to `Azure AI Inference SDK` and the code panel should have some code sample with the relevant endpoint. This endpoint will look something like `https://{projectName}.cognitiveservices.azure.com/openai/deployments/{modelName}`
 
-4. **Run Locally**
+
+5. **Run Locally**
 
    ```bash
    # Install dependencies
