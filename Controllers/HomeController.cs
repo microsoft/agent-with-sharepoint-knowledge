@@ -53,6 +53,12 @@ public class HomeController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult RunComplianceCheck()
+    {
+        return RedirectToAction(nameof(Index));
+    }
+
     [Authorize]
     [AuthorizeForScopes(Scopes = new string[] { 
         "https://cognitiveservices.azure.com/user_impersonation"
