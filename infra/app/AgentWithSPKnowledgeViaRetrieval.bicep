@@ -39,6 +39,45 @@ resource azureAdApp 'Microsoft.Graph/applications@v1.0' = {
     ]
     logoutUrl: 'https://${appFqdn}/signout-oidc'
   }
+  requiredResourceAccess: [
+    {
+      // Microsoft Graph
+      resourceAppId: '00000003-0000-0000-c000-000000000000'
+      resourceAccess: [
+        {
+          // Files.Read.All (delegated)
+          id: 'df85f4d6-205c-4ac5-a5ea-6bf408dba283'
+          type: 'Scope'
+        }
+        {
+          // Sites.Read.All (delegated)
+          id: '205e70e5-aba6-4c52-a976-6d2d46c48043'
+          type: 'Scope'
+        }
+        {
+          // Mail.Send (delegated)
+          id: 'e383f46e-2787-4529-855e-0e479a3ffac0'
+          type: 'Scope'
+        }
+        {
+          // User.Read (delegated)
+          id: 'e1fe6dd8-ba31-4d61-89e7-88639da4683d'
+          type: 'Scope'
+        }
+      ]
+    }
+    {
+      // Azure Cognitive Services
+      resourceAppId: '7d312290-28c8-473c-a0ed-8e53749b6d6d'
+      resourceAccess: [
+        {
+          // user_impersonation (delegated)
+          id: '5f1e8914-a52b-429f-9324-91b92b81adaf'
+          type: 'Scope'
+        }
+      ]
+    }
+  ]
 
   resource managedIdentityFederatedCredential 'federatedIdentityCredentials@v1.0' = {
     name: '${azureAdApp.uniqueName}/managed-identity-federation'
