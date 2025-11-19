@@ -11,6 +11,7 @@ param exists bool
 param resourceToken string
 param playgroundUrl string
 param modelName string
+param deploymentTimestamp string
 @secure()
 param appDefinition object
 
@@ -30,9 +31,10 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' 
 }
 
 // Configure the Azure AD application with federated credential to trust the managed identity
+// Note: uniqueName uses deploymentTimestamp to ensure uniqueness across deployments (even after purge)
 resource azureAdApp 'Microsoft.Graph/applications@v1.0' = {
   displayName: 'AI App with SharePoint Knowledge'
-  uniqueName: 'spe-compliance-app-${resourceToken}'
+  uniqueName: 'spe-compliance-app-${resourceToken}-${uniqueString(resourceToken, deploymentTimestamp)}'
   web: {
     redirectUris: [
       'https://${appFqdn}/signin-oidc'

@@ -16,6 +16,9 @@ param AgentWithSPKnowledgeViaRetrievalDefinition object
 @description('Id of the user or app to assign application roles')
 param principalId string
 
+@description('Timestamp for deployment to ensure unique resource names')
+param deploymentTimestamp string = utcNow('yyyyMMddHHmmss')
+
 // Tags that should be applied to all resources.
 // 
 // Note that 'azd-service-name' tags should be applied separately to service host resources.
@@ -91,6 +94,7 @@ module AgentWithSPKnowledgeViaRetrieval './app/AgentWithSPKnowledgeViaRetrieval.
     resourceToken: resourceToken
     playgroundUrl: foundry.outputs.playgroundUrl
     modelName: foundry.outputs.modelName
+    deploymentTimestamp: deploymentTimestamp
   }
   scope: rg
 }
